@@ -17,7 +17,8 @@ func main() {
 ```
 
 # Notes
-Default methods include Get, Post, and Patch. If you wish to use other methods you can use HandleReq.
+- Default methods include Get, Post, and Patch. If you wish to use other methods you can use HandleReq.
+- If you would like to easily format your headers you can use [this tool]("https://www.connorstevens.dev/headers") made by [@cnrstvns]("https://twitter.com/cnrstvns")
 
 # Contributing
 If you have anything you wish to contribute feel free to open an issue or pr
