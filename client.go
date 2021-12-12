@@ -20,18 +20,38 @@ import (
 	tls "github.com/Carcraftz/utls"
 )
 
+// get makes a simple get request to the specified url.
+// url is the website url you want to access formatted ass http://...
+// headers are the headers you want to include.
+// returns a http response object as well as a decoded string response
 func get(url string, headers map[string]string) (responseRequest *http.Response, respBody string) {
 	return HandleReq("GET", url, "", headers)
 }
 
+// post makes a simple post request to the specified url.
+// url is the website url you want to access formatted ass http://...
+// headers are the headers you want to include.
+// body is the body you want to include if none us ""
+// returns a http response object as well as a decoded string response
 func post(url string, headers map[string]string, body string) (responseRequest *http.Response, respBody string) {
 	return HandleReq("POST", url, body, headers)
 }
 
+// patch makes a simple patch request to the specified url.
+// url is the website url you want to access formatted ass http://...
+// headers are the headers you want to include.
+// body is the body you want to include if none us ""
+// returns a http response object as well as a decoded string response
 func patch(url string, headers map[string]string, body string) (responseRequest *http.Response, respBody string) {
 	return HandleReq("PATCH", url, body, headers)
 }
 
+// HandleReq can be used to handle and types of requests
+// method is the method of the request ex. "GET","POST","PATCH"
+// myUrl is the website url
+// input is the body of the request if none put ""
+// headers are the headers you want to include
+// returns a http response object as well as a decoded string response
 func HandleReq(method string, myUrl string, input string, headers map[string]string) (responseRequest *http.Response, respBody string) {
 
 	client, err := cclient.NewClient(tls.HelloChrome_Auto, "", true, time.Duration(6))
