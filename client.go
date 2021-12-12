@@ -20,24 +20,24 @@ import (
 	tls "github.com/Carcraftz/utls"
 )
 
-// get makes a simple get request to the specified url.
+// Get makes a simple get request to the specified url.
 // url is the website url you want to access formatted ass http://...
 // headers are the headers you want to include.
 // returns a http response object as well as a decoded string response
-func get(url string, headers map[string]string) (responseRequest *http.Response, respBody string) {
+func Get(url string, headers map[string]string) (responseRequest *http.Response, respBody string) {
 	return HandleReq("GET", url, "", headers)
 }
 
-// post makes a simple post request to the specified url.
+// Post makes a simple post request to the specified url.
 // url is the website url you want to access formatted ass http://...
 // headers are the headers you want to include.
 // body is the body you want to include if none us ""
 // returns a http response object as well as a decoded string response
-func post(url string, headers map[string]string, body string) (responseRequest *http.Response, respBody string) {
+func Post(url string, headers map[string]string, body string) (responseRequest *http.Response, respBody string) {
 	return HandleReq("POST", url, body, headers)
 }
 
-// patch makes a simple patch request to the specified url.
+// Patch makes a simple patch request to the specified url.
 // url is the website url you want to access formatted ass http://...
 // headers are the headers you want to include.
 // body is the body you want to include if none us ""
