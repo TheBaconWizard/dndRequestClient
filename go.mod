@@ -1,4 +1,4 @@
-module dndRequestClient/v0
+module github.com/TheBaconWizard/dndRequestClient
 
 go 1.17
 
