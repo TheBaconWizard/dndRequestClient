@@ -1,23 +1,19 @@
 package dndRequestClient
 
 import (
+	"bytes"
+	"compress/gzip"
 	"compress/zlib"
 	"fmt"
+	"github.com/Carcraftz/cclient"
+	http "github.com/Carcraftz/fhttp"
+	tls "github.com/Carcraftz/utls"
+	"github.com/andybalholm/brotli"
 	"io/ioutil"
 	"log"
 	"net/url"
-	"time"
-
-	"bytes"
-	"compress/gzip"
 	"strings"
-
-	"github.com/Carcraftz/cclient"
-	"github.com/andybalholm/brotli"
-
-	http "github.com/Carcraftz/fhttp"
-
-	tls "github.com/Carcraftz/utls"
+	"time"
 )
 
 // Get makes a simple get request to the specified url.
@@ -53,6 +49,11 @@ func patch(url string, headers map[string]string, body string) (responseRequest 
 // headers are the headers you want to include
 // returns a http response object as well as a decoded string response
 func HandleReq(method string, myUrl string, input string, headers map[string]string) (responseRequest *http.Response, respBody string) {
+
+	// check if non tls request in case user doesn't want to use tls for some odd reason ?
+	if !isTlsUrl(myUrl) {
+		return handleBasicReq("GET", myUrl, input, headers)
+	}
 
 	client, err := cclient.NewClient(tls.HelloChrome_Auto, "", true, time.Duration(6))
 	if err != nil {
@@ -180,6 +181,34 @@ func HandleReq(method string, myUrl string, input string, headers map[string]str
 	}
 
 	return resp, finalres
+}
+
+func handleBasicReq(method string, myUrl string, input string, headers map[string]string) (responseRequest *http.Response, respBody string) {
+
+	var req *http.Request
+	client := http.Client{}
+	if len(input) > 0 {
+		req, _ = http.NewRequest(method, myUrl, strings.NewReader(input))
+	} else {
+		req, _ = http.NewRequest(method, myUrl, nil)
+	}
+
+	// add headers
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
+	response, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	finalRes, _ := ioutil.ReadAll(response.Body)
+
+	return response, string(finalRes)
+}
+
+func isTlsUrl(myUrl string) bool {
+	return myUrl[4] == 's'
 }
 
 func gUnzipData(data []byte) (resData []byte, err error) {
