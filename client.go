@@ -52,7 +52,7 @@ func HandleReq(method string, myUrl string, input string, headers map[string]str
 
 	// check if non tls request in case user doesn't want to use tls for some odd reason ?
 	if !isTlsUrl(myUrl) {
-		return handleBasicReq("GET", myUrl, input, headers)
+		return handleBasicReq(method, myUrl, input, headers)
 	}
 
 	client, err := cclient.NewClient(tls.HelloChrome_Auto, "", true, time.Duration(6))
@@ -185,7 +185,8 @@ func HandleReq(method string, myUrl string, input string, headers map[string]str
 
 func handleBasicReq(method string, myUrl string, input string, headers map[string]string) (responseRequest *http.Response, respBody string) {
 	// convert to https url
-	myUrl = "https://" + myUrl[6:len(myUrl)]
+	myUrl = "https://" + myUrl[7:len(myUrl)]
+	fmt.Println(method)
 	var req *http.Request
 	client := http.Client{}
 	if len(input) > 0 {
@@ -200,14 +201,44 @@ func handleBasicReq(method string, myUrl string, input string, headers map[strin
 	for k, v := range headers {
 		req.Header.Add(k, v)
 	}
-	response, err := client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		panic(err)
 	}
 
-	finalRes, _ := ioutil.ReadAll(response.Body)
+	// TODO rewrite this as a function to reduce file size
+	encoding := resp.Header["Content-Encoding"]
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	finalres := ""
+	finalres = string(responseBody)
+	if len(encoding) > 0 {
+		if encoding[0] == "gzip" {
+			unz, err := gUnzipData(responseBody)
+			if err != nil {
+				panic(err)
+			}
+			finalres = string(unz)
+		} else if encoding[0] == "deflate" {
+			unz, err := enflateData(responseBody)
+			if err != nil {
+				panic(err)
+			}
+			finalres = string(unz)
+		} else if encoding[0] == "br" {
+			unz, err := unBrotliData(responseBody)
+			if err != nil {
+				panic(err)
+			}
+			finalres = string(unz)
+		} else {
+			fmt.Println("UNKNOWN ENCODING: " + encoding[0])
+			finalres = string(responseBody)
+		}
+	} else {
+		finalres = string(responseBody)
+	}
 
-	return response, string(finalRes)
+	return resp, finalres
 }
 
 func isTlsUrl(myUrl string) bool {
