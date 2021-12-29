@@ -184,7 +184,8 @@ func HandleReq(method string, myUrl string, input string, headers map[string]str
 }
 
 func handleBasicReq(method string, myUrl string, input string, headers map[string]string) (responseRequest *http.Response, respBody string) {
-
+	// convert to https url
+	myUrl = "https://" + myUrl[6:len(myUrl)]
 	var req *http.Request
 	client := http.Client{}
 	if len(input) > 0 {
@@ -192,6 +193,8 @@ func handleBasicReq(method string, myUrl string, input string, headers map[strin
 	} else {
 		req, _ = http.NewRequest(method, myUrl, nil)
 	}
+
+	//TODO add tls like headers
 
 	// add headers
 	for k, v := range headers {
