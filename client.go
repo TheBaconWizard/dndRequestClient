@@ -16,30 +16,56 @@ import (
 	"time"
 )
 
-// Get makes a simple get request to the specified url.
-// url is the website url you want to access formatted ass http://...
+// GetProxyless Get makes a simple get request to the specified url using localhost.
+// url is the website url you want to access formatted ass https://...
 // headers are the headers you want to include.
 // returns a http response object as well as a decoded string response
-func Get(url string, headers map[string]string) (responseRequest *http.Response, respBody string) {
-	return HandleReq("GET", url, "", headers)
+func GetProxyless(url string, headers map[string]string) (responseRequest *http.Response, respBody string) {
+	return HandleReq("GET", url, "", headers, "")
 }
 
-// Post makes a simple post request to the specified url.
-// url is the website url you want to access formatted ass http://...
+// PostProxyless Post makes a simple post request to the specified url using localhost.
+// url is the website url you want to access formatted ass https://...
 // headers are the headers you want to include.
 // body is the body you want to include if none us ""
 // returns a http response object as well as a decoded string response
-func Post(url string, headers map[string]string, body string) (responseRequest *http.Response, respBody string) {
-	return HandleReq("POST", url, body, headers)
+func PostProxyless(url string, headers map[string]string, body string) (responseRequest *http.Response, respBody string) {
+	return HandleReq("POST", url, body, headers, "")
 }
 
-// Patch makes a simple patch request to the specified url.
-// url is the website url you want to access formatted ass http://...
+// PatchProxyless Patch makes a simple patch request to the specified url using localhost.
+// url is the website url you want to access formatted ass https://...
 // headers are the headers you want to include.
 // body is the body you want to include if none us ""
 // returns a http response object as well as a decoded string response
-func patch(url string, headers map[string]string, body string) (responseRequest *http.Response, respBody string) {
-	return HandleReq("PATCH", url, body, headers)
+func PatchProxyless(url string, headers map[string]string, body string) (responseRequest *http.Response, respBody string) {
+	return HandleReq("PATCH", url, body, headers, "")
+}
+
+// Get makes a simple get request to the specified url using the specified proxy in format http://user:pass@host:port.
+// url is the website url you want to access formatted ass https://...
+// headers are the headers you want to include.
+// returns a http response object as well as a decoded string response
+func Get(url string, headers map[string]string, proxy string) (responseRequest *http.Response, respBody string) {
+	return HandleReq("GET", url, "", headers, proxy)
+}
+
+// Post makes a simple post request to the specified url using the specified proxy in format http://user:pass@host:port.
+// url is the website url you want to access formatted ass https://...
+// headers are the headers you want to include.
+// body is the body you want to include if none us ""
+// returns a http response object as well as a decoded string response
+func Post(url string, headers map[string]string, body string, proxy string) (responseRequest *http.Response, respBody string) {
+	return HandleReq("POST", url, body, headers, proxy)
+}
+
+// Patch makes a simple patch request to the specified url using the specified proxy in format http://user:pass@host:port.
+// url is the website url you want to access formatted ass https://...
+// headers are the headers you want to include.
+// body is the body you want to include if none us ""
+// returns a http response object as well as a decoded string response
+func patch(url string, headers map[string]string, body string, proxy string) (responseRequest *http.Response, respBody string) {
+	return HandleReq("PATCH", url, body, headers, proxy)
 }
 
 // HandleReq can be used to handle and types of requests
@@ -48,14 +74,14 @@ func patch(url string, headers map[string]string, body string) (responseRequest 
 // input is the body of the request if none put ""
 // headers are the headers you want to include
 // returns a http response object as well as a decoded string response
-func HandleReq(method string, myUrl string, input string, headers map[string]string) (responseRequest *http.Response, respBody string) {
+func HandleReq(method string, myUrl string, input string, headers map[string]string, proxy string) (responseRequest *http.Response, respBody string) {
 
 	// check if non tls request in case user doesn't want to use tls for some odd reason ?
 	if !isTlsUrl(myUrl) {
 		return handleBasicReq(method, myUrl, input, headers)
 	}
 
-	client, err := cclient.NewClient(tls.HelloChrome_Auto, "", true, time.Duration(6))
+	client, err := cclient.NewClient(tls.HelloChrome_Auto, proxy, true, time.Duration(6))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -148,6 +174,11 @@ func HandleReq(method string, myUrl string, input string, headers map[string]str
 	}
 	req.Header.Set("Host", u.Host)
 	resp, err := client.Do(req)
+	// fix occasional errors with memory when making to many requests at once
+	if err != nil {
+		time.Sleep(500 * time.Millisecond)
+		return HandleReq(method, myUrl, input, headers, proxy)
+	}
 	//forward decoded response body
 	encoding := resp.Header["Content-Encoding"]
 	responseBody, err := ioutil.ReadAll(resp.Body)
@@ -185,7 +216,7 @@ func HandleReq(method string, myUrl string, input string, headers map[string]str
 
 func handleBasicReq(method string, myUrl string, input string, headers map[string]string) (responseRequest *http.Response, respBody string) {
 	// convert to https url
-	myUrl = "https://" + myUrl[7:len(myUrl)]
+	myUrl = "https://" + myUrl[7:]
 	fmt.Println(method)
 	var req *http.Request
 	client := http.Client{}
